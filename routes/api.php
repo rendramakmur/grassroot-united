@@ -14,6 +14,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::group(['prefix' => 'frontoffice'], function() {
+});
+
+Route::group(['prefix' => 'backoffice'], function() {
+    Route::post('/login');
+
+    Route::group(['middleware' => 'back-office'], function () {
+        Route::get('/user');
+    });
 });
