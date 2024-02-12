@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Helper\JwtHelper;
 use App\Http\Requests\BackOffice\Credential\BackOfficeLoginRequest;
 use App\Http\Response\General\BasicResponse;
+use App\Http\Service\BackOffice\UserInformation\UserInformationBuilder;
 use App\Models\UserInformation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -19,10 +20,8 @@ class BackOfficeCredentialController extends Controller
         $data = $request->validated();
 
         $user = UserInformation::where('ui_email', $data['email'])->first();
-        
 
-        // Hash::check($data['password'], $user->ui_password)
-        if (!$user || ($data['password'] != $user->ui_password)) {
+        if (!$user || !Hash::check($data['password'], $user->ui_password)) {
             $this->buildErrorResponse("Email/Password is invalid", ApiCode::UNAUTHORIZED);
         }
 
@@ -45,8 +44,9 @@ class BackOfficeCredentialController extends Controller
 
     public function check(Request $request) {
         // Success middlware and get payload
-        return $this->buildSuccessResponse([
-            'payload' => $request->tokenPayload
-        ]);
+        $user = UserInformation::where('ui_id', $request->tokenPayload->userId)->first();
+        $res = UserInformationBuilder::build($user);
+
+        return $this->buildSuccessResponse($res);
     }
 }

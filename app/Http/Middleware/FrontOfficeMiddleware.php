@@ -25,7 +25,8 @@ class FrontOfficeMiddleware
           $this->buildErrorResponse("Unauthorized", ApiCode::UNAUTHORIZED);
         }
 
-        $request->tokenPayload = $decodedToken;
+        $tokenPayloadArray = json_decode(json_encode($decodedToken), true);
+        $request->merge(['tokenPayload' => $tokenPayloadArray]);
       } catch (\Exception $e) {
         $this->buildErrorResponse("Unauthorized", ApiCode::UNAUTHORIZED);
       }

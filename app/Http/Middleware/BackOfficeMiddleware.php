@@ -24,9 +24,11 @@ class BackOfficeMiddleware
         if ($decodedToken->userType != GlobalParam::BACK_OFFICE_USER) {
           $this->buildErrorResponse("Unauthorized", ApiCode::UNAUTHORIZED);
         }
+        $tokenPayloadArray = json_decode(json_encode($decodedToken), true);
 
-        $request->tokenPayload = $decodedToken;
+        $request->merge(['tokenPayload' => $tokenPayloadArray]);
       } catch (\Exception $e) {
+        error_log($e);
         $this->buildErrorResponse("Unauthorized", ApiCode::UNAUTHORIZED);
       }
     } else {

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BackOffice\Credential\BackOfficeCredentialController;
+use App\Http\Controllers\BackOffice\UserInformation\BackOfficeUserInformationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,5 +23,6 @@ Route::group(['prefix' => 'backoffice'], function() {
 
     Route::group(['middleware' => 'backoffice'], function () {
         Route::get('/user', [BackOfficeCredentialController::class, 'check']);
+        Route::post('/user', [BackOfficeUserInformationController::class, 'create']);
     });
 });
