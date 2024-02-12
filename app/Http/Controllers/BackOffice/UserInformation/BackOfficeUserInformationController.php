@@ -18,13 +18,61 @@ class BackOfficeUserInformationController extends Controller
 {
     use BasicResponse;
 
+    public function index(Request $request) {
+        $page = $request->query('page', 1);
+        $limit = $request->query('limit', 10);
+        $userNumber = $request->query('userNumber');
+        $email = $request->query('email');
+
+        $userQuery = UserInformation::query();
+
+        if ($userNumber) {
+            $userQuery->where('ui_user_number', $userNumber);
+        }
+        if ($email) {
+            $userQuery->where('ui_email', 'like', '%' . $email . '%');
+        }
+
+        $paginateData = $userQuery->paginate($limit, ['*'], 'page', $page);
+        $items = $paginateData->items();
+        $response = collect($items)->map(function ($user) {
+            return [
+                'id' => $user->ui_id,
+                'userNumber' => $user->ui_user_number,
+                'email' => $user->ui_email,
+                'firstName' => $user->ui_first_name,
+                'lastName' => $user->ui_last_name,
+                'emailStatus' => $user->ui_email_status
+            ];
+        });
+        $responseData = [
+            'page' => $paginateData->currentPage(),
+            'limit' => $paginateData->perPage(),
+            'totalPage' => $paginateData->lastPage(),
+            'totalElements' => $paginateData->total(),
+            'data' => $response->toArray()
+        ];
+        
+        return $this->buildSuccessResponse($responseData);
+    }
+
+    public function detail(Request $request, $userNumber) {
+        $user = UserInformation::where('ui_user_number', $userNumber)->first();
+        if (!$user) {
+            $this->buildErrorResponse('User not found', ApiCode::NOT_FOUND);
+        }
+        $res = UserInformationBuilder::build($user);
+
+        return $this->buildSuccessResponse($res);
+    }
+
     public function create(CreateUserRequest $request) 
     {
         $data = $request->validated();
 
         if (UserInformation::where('ui_email', $request['email'])->exists())
         {
-            $this->buildErrorResponse("Email already exists", ApiCode::BAD_REQUEST);
+            $this->buildErrorResponse('Email already exists', ApiCode::BAD_REQUEST);
         }
 
         DB::beginTransaction();
@@ -64,6 +112,4 @@ class BackOfficeUserInformationController extends Controller
             $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
         }
     }
-
-    
 }

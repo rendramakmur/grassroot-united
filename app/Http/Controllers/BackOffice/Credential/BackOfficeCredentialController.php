@@ -43,7 +43,6 @@ class BackOfficeCredentialController extends Controller
     }
 
     public function check(Request $request) {
-        // Success middlware and get payload
         $user = UserInformation::where('ui_id', $request->tokenPayload->userId)->first();
         $res = UserInformationBuilder::build($user);
 

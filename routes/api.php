@@ -22,7 +22,8 @@ Route::group(['prefix' => 'backoffice'], function() {
     Route::post('/login', [BackOfficeCredentialController::class, 'login']);
 
     Route::group(['middleware' => 'backoffice'], function () {
-        Route::get('/user', [BackOfficeCredentialController::class, 'check']);
+        Route::get('/user/{userNumber}', [BackOfficeUserInformationController::class, 'detail']);
+        Route::get('/user/', [BackOfficeUserInformationController::class, 'index']);
         Route::post('/user', [BackOfficeUserInformationController::class, 'create']);
     });
 });
