@@ -25,5 +25,7 @@ Route::group(['prefix' => 'backoffice'], function() {
         Route::get('/user/{userNumber}', [BackOfficeUserInformationController::class, 'detail']);
         Route::get('/user/', [BackOfficeUserInformationController::class, 'index']);
         Route::post('/user', [BackOfficeUserInformationController::class, 'create']);
+        Route::put('/user/{userNumber}', [BackOfficeUserInformationController::class, 'update']);
+        Route::delete('/user/{userNumber}', [BackOfficeUserInformationController::class, 'delete']);
     });
 });

@@ -6,13 +6,16 @@ use App\Http\Constant\ApiCode;
 use App\Http\Controllers\Controller;
 use App\Http\Helper\NumberGenerator;
 use App\Http\Requests\BackOffice\UserInformation\CreateUserRequest;
+use App\Http\Requests\BackOffice\UserInformation\UpdateUserRequest;
 use App\Http\Response\General\BasicResponse;
 use App\Http\Service\BackOffice\UserInformation\UserInformationBuilder;
+use App\Mail\UserConfirmationEmail;
 use App\Models\UserInformation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 
 class BackOfficeUserInformationController extends Controller
 {
@@ -70,8 +73,7 @@ class BackOfficeUserInformationController extends Controller
     {
         $data = $request->validated();
 
-        if (UserInformation::where('ui_email', $request['email'])->exists())
-        {
+        if (UserInformation::where('ui_email', $request['email'])->exists()) {
             $this->buildErrorResponse('Email already exists', ApiCode::BAD_REQUEST);
         }
 
@@ -104,11 +106,72 @@ class BackOfficeUserInformationController extends Controller
             DB::commit();
 
             $response = UserInformationBuilder::build($user);
+            Mail::to($user->ui_email)->send(new UserConfirmationEmail($user));
 
             return $this->buildSuccessResponse($response);
         } catch (\Exception $e) {
             DB::rollBack();
             
+            $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
+        }
+    }
+
+    public function update(UpdateUserRequest $request, $userNumber) {
+        $data = $request->validated();
+        $user = UserInformation::where('ui_user_number', $userNumber)->first();
+        if (!$user) {
+            $this->buildErrorResponse('User not found', ApiCode::NOT_FOUND);
+        }
+
+        if (UserInformation::where('ui_email', $request['email'])->where('ui_id', '!=', $user->ui_id)->exists()) {
+            $this->buildErrorResponse('Email already exists', ApiCode::BAD_REQUEST);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $user->ui_user_type = $data['userType']['id'];
+            $user->ui_first_name = $data['firstName'];
+            $user->ui_last_name = $data['lastName'];
+            $user->ui_email = $data['email'];
+            $user->ui_mobile_prefix = $data['mobilePrefix']['id'];
+            $user->ui_mobile_number = $data['mobileNumber'];
+            $user->ui_occupation = $data['occupation']['id'];
+            $user->ui_date_of_birth = $data['dateOfBirth'];
+            $user->ui_gender = $data['gender']['id'];
+            $user->ui_photo_profile = $data['photoProfile'];
+            $user->ui_address = $data['address'];
+            $user->ui_city = $data['city']['id'];
+            $user->ui_body_size = $data['bodySize']['id'];
+            $user->ui_email_status = $data['emailStatus'];
+            $user->ui_verified_at = $data['verifiedAt'];
+            $user->ui_updated_by = $request->input('tokenPayload')['userId'];
+
+            $user->save();
+
+            DB::commit();
+
+            $response = UserInformationBuilder::build($user);
+
+            return $this->buildSuccessResponse($response);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
+        }
+    }
+
+    public function delete(Request $request, $userNumber) {
+        $user = UserInformation::where('ui_user_number', $userNumber)->first();
+        if (!$user) {
+            $this->buildErrorResponse('User not found', ApiCode::NOT_FOUND);
+        }
+
+        try {
+            $user->delete();
+
+            $this->buildSuccessResponse("User deleted successfully");
+        } catch (\Exception $e) {
             $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
         }
     }
