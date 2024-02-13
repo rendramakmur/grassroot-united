@@ -8,10 +8,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Helper\NumberGenerator;
 use App\Http\Requests\BackOffice\GameData\CreateGameDataRequest;
 use App\Http\Requests\BackOffice\GameData\UpdateGameDataRequest;
+use App\Http\Requests\BackOffice\GameData\UpdateGameGalleryRequest;
+use App\Http\Requests\BackOffice\GameData\UpdateGameInformationRequest;
 use App\Http\Response\General\BasicResponse;
 use App\Http\Service\BackOffice\GameData\GameDataBuilder;
 use App\Http\Service\General\GlobalParamService;
 use App\Models\GameData;
+use App\Models\GameGallery;
+use App\Models\GameInformation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -83,7 +87,7 @@ class BackOfficeGameDataController extends Controller
             $game->gd_outfield_price = $data['outfieldPrice'];
             $game->gd_notes = $data['notes'];
             $game->gd_status = $data['status']['id'];
-            $game->gd_created_by = $request->input('tokenPayload')['userId'];
+            $game->gd_created_by = $request->attributes->get('tokenPayload')['userId'];
 
             $game->save();
 
@@ -103,7 +107,7 @@ class BackOfficeGameDataController extends Controller
         $data = $request->validated();
         $game = GameData::where('gd_game_number', $gameNumber)->first();
         if (!$game) {
-            $this->buildErrorResponse('User not found', ApiCode::NOT_FOUND);
+            $this->buildErrorResponse('Game not found', ApiCode::NOT_FOUND);
         }
 
         DB::beginTransaction();
@@ -119,7 +123,7 @@ class BackOfficeGameDataController extends Controller
             $game->gd_outfield_price = $data['goalkeeperPrice'];
             $game->gd_notes = $data['notes'];
             $game->gd_status = $data['status']['id'];
-            $game->gd_updated_by = $request->input('tokenPayload')['userId'];
+            $game->gd_updated_by = $request->attributes->get('tokenPayload')['userId'];
 
             $game->save();
 
@@ -138,7 +142,7 @@ class BackOfficeGameDataController extends Controller
     public function delete(Request $request, $gameNumber) {
         $game = GameData::where('gd_game_number', $gameNumber)->first();
         if (!$game) {
-            $this->buildErrorResponse('User not found', ApiCode::NOT_FOUND);
+            $this->buildErrorResponse('Game not found', ApiCode::NOT_FOUND);
         }
 
         try {
@@ -146,6 +150,70 @@ class BackOfficeGameDataController extends Controller
 
             $this->buildSuccessResponse("Game deleted successfully");
         } catch (\Exception $e) {
+            $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
+        }
+    }
+
+    public function updateGameInfo(UpdateGameInformationRequest $request, $gameNumber) {
+        $data = $request->validated();
+        $game = GameData::where('gd_game_number', $gameNumber)->first();
+        if (!$game) {
+            $this->buildErrorResponse('Game not found', ApiCode::NOT_FOUND);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            GameInformation::where('gi_gd_id', $game->gd_id)->delete();
+
+            foreach ($data as $info) {
+                $gameInfo = new GameInformation();
+                $gameInfo->gi_gd_id = $game->gd_id;
+                $gameInfo->gi_info_type = $info['type']['id'];
+                $gameInfo->gi_description = $info['description'];
+                $gameInfo->save();
+            }
+
+            $response = GameDataBuilder::build($game);
+
+            DB::commit();
+
+            return $this->buildSuccessResponse($response);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
+        }
+    }
+
+    public function updateGameGallery(UpdateGameGalleryRequest $request, $gameNumber) {
+        $data = $request->validated();
+        $game = GameData::where('gd_game_number', $gameNumber)->first();
+        if (!$game) {
+            $this->buildErrorResponse('Game not found', ApiCode::NOT_FOUND);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            GameGallery::where('gg_gd_id', $game->gd_id)->delete();
+
+            foreach ($data as $gallery) {
+                $gameGallery = new GameGallery();
+                $gameGallery->gg_gd_id = $game->gd_id;
+                $gameGallery->gg_image_url = $gallery['url'];
+                $gameGallery->gg_alt_image = $gallery['altImage'];
+                $gameGallery->save();
+            }
+
+            $response = GameDataBuilder::build($game);
+
+            DB::commit();
+
+            return $this->buildSuccessResponse($response);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
             $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
         }
     }

@@ -98,7 +98,7 @@ class BackOfficeUserInformationController extends Controller
             $user->ui_activation_code = Str::uuid()->toString();
             $user->ui_email_status = $data['emailStatus'];
             $user->ui_verified_at = $data['verifiedAt'];
-            $user->ui_created_by = $request->input('tokenPayload')['userId'];
+            $user->ui_created_by = $request->attributes->get('tokenPayload')['userId'];
 
             $user->save();
 
@@ -146,7 +146,7 @@ class BackOfficeUserInformationController extends Controller
             $user->ui_body_size = $data['bodySize']['id'];
             $user->ui_email_status = $data['emailStatus'];
             $user->ui_verified_at = $data['verifiedAt'];
-            $user->ui_updated_by = $request->input('tokenPayload')['userId'];
+            $user->ui_updated_by = $request->attributes->get('tokenPayload')['userId'];
 
             $user->save();
 

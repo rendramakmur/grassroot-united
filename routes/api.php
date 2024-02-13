@@ -30,6 +30,8 @@ Route::group(['prefix' => 'backoffice'], function() {
         Route::put('/user/{userNumber}', [BackOfficeUserInformationController::class, 'update']);
         Route::delete('/user/{userNumber}', [BackOfficeUserInformationController::class, 'delete']);
 
+        Route::put('/game/info/{gameNumber}', [BackOfficeGameDataController::class, 'updateGameInfo']);
+        Route::put('/game/gallery/{gameNumber}', [BackOfficeGameDataController::class, 'updateGameGallery']);
         Route::get('/game/{userNumber}', [BackOfficeGameDataController::class, 'detail']);
         Route::get('/game', [BackOfficeGameDataController::class, 'index']);
         Route::post('/game', [BackOfficeGameDataController::class, 'create']);
