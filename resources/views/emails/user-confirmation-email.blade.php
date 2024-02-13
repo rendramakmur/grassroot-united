@@ -23,16 +23,11 @@
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         h1 {
-            color: #007bff;
+            color: #333;
             text-align: center;
         }
         p {
             margin-bottom: 20px;
-        }
-        .verification-code {
-            font-weight: bold;
-            font-size: 20px;
-            color: #28a745;
         }
     </style>
 </head>
@@ -40,12 +35,13 @@
     <div class="container">
         <h1>User Registration Confirmation</h1>
         <p>
-            Thank you for registering! Here are your registration details:
+            Thank you for registering! Here are your registration details and please click Activation URL to activate your Grassroot United FC account:
         </p>
         <p>
             Email: <strong>{{ $userInformation->ui_email }}</strong><br>
             Registered at: <strong>{{ $userInformation->ui_created_at->format('Y-m-d H:i:s') }}</strong><br>
-            Activation Code: <span class="verification-code">{{ $userInformation->ui_activation_code }}</span>
+            Activation Code: {{ $userInformation->ui_activation_code }}<br>
+            Activation URL: {{ $activationUrl }}
         </p>
         <p>
             If you have any questions or concerns, please don't hesitate to contact us.

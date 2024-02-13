@@ -41,11 +41,4 @@ class BackOfficeCredentialController extends Controller
             'payload' => JwtHelper::decodedToken($token)
         ]);
     }
-
-    public function check(Request $request) {
-        $user = UserInformation::where('ui_id', $request->tokenPayload->userId)->first();
-        $res = UserInformationBuilder::build($user);
-
-        return $this->buildSuccessResponse($res);
-    }
 }

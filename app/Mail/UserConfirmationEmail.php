@@ -15,13 +15,15 @@ class UserConfirmationEmail extends Mailable
     use Queueable, SerializesModels;
 
     public $userInformation;
+    public $activationUrl;
 
     /**
      * Create a new message instance.
      */
-    public function __construct(UserInformation $userInformation)
+    public function __construct(UserInformation $userInformation, string $activationUrl)
     {
         $this->userInformation = $userInformation;
+        $this->activationUrl = $activationUrl;
     }
 
     /**

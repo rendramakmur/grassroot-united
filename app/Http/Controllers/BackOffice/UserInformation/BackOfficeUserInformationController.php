@@ -106,7 +106,8 @@ class BackOfficeUserInformationController extends Controller
             DB::commit();
 
             $response = UserInformationBuilder::build($user);
-            Mail::to($user->ui_email)->send(new UserConfirmationEmail($user));
+            $activationUrl = url('/api/backoffice/user/activate/' . $user->ui_user_number . '/' . $user->ui_activation_code);
+            Mail::to($user->ui_email)->queue(new UserConfirmationEmail($user, $activationUrl));
 
             return $this->buildSuccessResponse($response);
         } catch (\Exception $e) {
@@ -171,6 +172,30 @@ class BackOfficeUserInformationController extends Controller
             $user->delete();
 
             $this->buildSuccessResponse("User deleted successfully");
+        } catch (\Exception $e) {
+            $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
+        }
+    }
+
+    public function activate(Request $request, $userNumber, $activationCode) {
+        $user = UserInformation::where('ui_user_number', $userNumber)->first();
+        if (!$user) {
+            $this->buildErrorResponse('User not found', ApiCode::NOT_FOUND);
+        }
+
+        if ($user->ui_email_status) {
+            $this->buildErrorResponse('Account already active', ApiCode::BAD_REQUEST);
+        }
+
+        if (!($user->ui_activation_code == $activationCode)) {
+            $this->buildErrorResponse('Wrong activation code', ApiCode::BAD_REQUEST);
+        }
+
+        try {
+            $user->ui_email_status = true;
+            $user->save();
+
+            $this->buildSuccessResponse("Email activate successfully");
         } catch (\Exception $e) {
             $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
         }
