@@ -10,7 +10,7 @@ trait BasicResponse{
   protected static function buildSuccessResponse($data): JsonResponse 
   {
     return response()->json([
-      'status' => "Success",
+      'status' => "success",
       'data' => $data,
       'code' => ApiCode::SUCCESS,
       'error' => null
@@ -20,7 +20,7 @@ trait BasicResponse{
   protected static function buildErrorResponse($error, $code) 
   {
     throw new HttpResponseException(response([
-      'status' => "Error",
+      'status' => "error",
       'data' => null,
       'code' => $code,
       'error' => $error

@@ -69,8 +69,7 @@ class BackOfficeUserInformationController extends Controller
         return $this->buildSuccessResponse($res);
     }
 
-    public function create(CreateUserRequest $request) 
-    {
+    public function create(CreateUserRequest $request) {
         $data = $request->validated();
 
         if (UserInformation::where('ui_email', $request['email'])->exists()) {
@@ -103,9 +102,10 @@ class BackOfficeUserInformationController extends Controller
 
             $user->save();
 
+            $response = UserInformationBuilder::build($user);
+
             DB::commit();
 
-            $response = UserInformationBuilder::build($user);
             $activationUrl = url('/api/backoffice/user/activate/' . $user->ui_user_number . '/' . $user->ui_activation_code);
             Mail::to($user->ui_email)->queue(new UserConfirmationEmail($user, $activationUrl));
 
@@ -150,9 +150,9 @@ class BackOfficeUserInformationController extends Controller
 
             $user->save();
 
-            DB::commit();
-
             $response = UserInformationBuilder::build($user);
+
+            DB::commit();
 
             return $this->buildSuccessResponse($response);
         } catch (\Exception $e) {

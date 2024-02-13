@@ -54,8 +54,7 @@ class CreateUserRequest extends FormRequest
         ];
     }
 
-    protected function failedValidation(Validator $validator)
-    {
+    protected function failedValidation(Validator $validator) {
         return $this->buildErrorResponse($validator->getMessageBag(), ApiCode::BAD_REQUEST);
     }
 }
