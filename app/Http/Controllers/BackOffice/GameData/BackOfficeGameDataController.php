@@ -7,6 +7,8 @@ use App\Http\Constant\GlobalParamSlug;
 use App\Http\Controllers\Controller;
 use App\Http\Helper\NumberGenerator;
 use App\Http\Requests\BackOffice\GameData\CreateGameDataRequest;
+use App\Http\Requests\BackOffice\GameData\PaidPlayerRequest;
+use App\Http\Requests\BackOffice\GameData\RegisterPlayerRequest;
 use App\Http\Requests\BackOffice\GameData\UpdateGameDataRequest;
 use App\Http\Requests\BackOffice\GameData\UpdateGameGalleryRequest;
 use App\Http\Requests\BackOffice\GameData\UpdateGameInformationRequest;
@@ -16,6 +18,9 @@ use App\Http\Service\General\GlobalParamService;
 use App\Models\GameData;
 use App\Models\GameGallery;
 use App\Models\GameInformation;
+use App\Models\GameRegisteredPlayer;
+use App\Models\GameRegistration;
+use App\Models\UserInformation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -210,6 +215,127 @@ class BackOfficeGameDataController extends Controller
 
             DB::commit();
 
+            return $this->buildSuccessResponse($response);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
+        }
+    }
+
+    public function playerRegister(RegisterPlayerRequest $request, $gameNumber) {
+        $data = $request->validated();
+        $userNumber = $data['userNumber'];
+        $game = GameData::where('gd_game_number', $gameNumber)->first();
+        if (!$game) {
+            $this->buildErrorResponse('Game not found', ApiCode::NOT_FOUND);
+        }
+        $user = UserInformation::where('ui_user_number', $userNumber)->first();
+        if (!$user) {
+            $this->buildErrorResponse('User not found', ApiCode::NOT_FOUND);
+        }
+        
+        DB::beginTransaction();
+
+        try {
+            $registeredPlayer = GameRegistration::where('gr_gd_id', $game->gd_id)
+            ->where('gr_ui_id', $user->ui_id)
+            ->first();
+
+            if ($registeredPlayer) {
+                $this->buildErrorResponse("Player already registered", ApiCode::BAD_REQUEST);
+            }
+
+            if ($data['isOutfield']) {
+                $price = $game->gd_goalkeeper_price;
+            } else {
+                $price = $game->gd_outfield_price;
+            }
+
+            $registerPlayer = new GameRegistration();
+            $registerPlayer->gr_gd_id = $game->gd_id;
+            $registerPlayer->gr_ui_id = $user->ui_id;
+            $registerPlayer->gr_is_outfield = $data['isOutfield'];
+            $registerPlayer->gr_amount = $price;
+            $registerPlayer->gr_transaction_number = NumberGenerator::generate(15, 'TRX', 'gr_transaction_number', $registerPlayer);
+            $registerPlayer->gr_created_by = $request->attributes->get('tokenPayload')['userId'];
+
+            $registerPlayer->save();
+
+            $response = GameDataBuilder::build($game);
+
+            DB::commit();
+            
+            return $this->buildSuccessResponse($response);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
+        }
+
+
+    }
+
+    public function playerPaid(PaidPlayerRequest $request, $gameNumber) {
+        $data = $request->validated();
+        $userNumber = $data['userNumber'];
+        $game = GameData::where('gd_game_number', $gameNumber)->first();
+        if (!$game) {
+            $this->buildErrorResponse('Game not found', ApiCode::NOT_FOUND);
+        }
+        $user = UserInformation::where('ui_user_number', $userNumber)->first();
+        if (!$user) {
+            $this->buildErrorResponse('User not found', ApiCode::NOT_FOUND);
+        }
+
+        $registered = GameRegistration::where('gr_gd_id', $game->gd_id)
+        ->where('gr_ui_id', $user->ui_id)
+        ->first();
+
+        if (!$registered) {
+            $this->buildErrorResponse("Player not yet register", ApiCode::BAD_REQUEST);
+        }
+        
+        $userCheck = GameRegisteredPlayer::where('grp_gd_id', $game->gd_id)
+        ->where('grp_ui_id', $user->ui_id)
+        ->exists();
+        if ($userCheck) {
+            $this->buildErrorResponse("Player already registered/paid", ApiCode::BAD_REQUEST);
+        }
+
+        $outfieldCount = GameRegisteredPlayer::where('grp_gd_id', $game->gd_id)
+        ->where('grp_is_outfield', true)
+        ->count();
+        $goalkeeperCount = GameRegisteredPlayer::where('grp_gd_id', $game->gd_id)
+        ->where('grp_is_outfield', false)
+        ->count();
+        if ($outfieldCount >= $game->gd_outfield_quota) {
+            $this->buildErrorResponse("Outfield player quota already full", ApiCode::BAD_REQUEST);
+        }
+
+        if ($goalkeeperCount >= $game->gd_goalkeeper_quota) {
+            $this->buildErrorResponse("Goalkeeper quota already full", ApiCode::BAD_REQUEST);
+            
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $paidPlayer = new GameRegisteredPlayer();
+            $paidPlayer->grp_gd_id = $game->gd_id;
+            $paidPlayer->grp_ui_id = $user->ui_id;
+            $paidPlayer->grp_is_outfield = $registered->gr_is_outfield;
+            $paidPlayer->grp_amount_paid = $data['amountPaid'];
+            $paidPlayer->grp_paid_at = $data['paidAt'];
+            $paidPlayer->grp_transaction_number = $registered->gr_transaction_number;
+            $paidPlayer->grp_created_by = $request->attributes->get('tokenPayload')['userId'];
+
+            $paidPlayer->save();
+
+            $response = GameDataBuilder::build($game);
+
+            DB::commit();
+            
             return $this->buildSuccessResponse($response);
         } catch (\Exception $e) {
             DB::rollBack();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Service\BackOffice\GameData;
 
+use App\Http\Constant\DateFormat;
 use App\Http\Constant\GlobalParamSlug;
 use App\Http\Service\General\GlobalParamService;
 use App\Models\GameData;
@@ -10,6 +11,7 @@ use App\Models\GameInformation;
 use App\Models\GameRegisteredPlayer;
 use App\Models\GameRegistration;
 use App\Models\UserInformation;
+use Carbon\Carbon;
 
 class GameDataBuilder
 {
@@ -61,9 +63,9 @@ class GameDataBuilder
           'lastName' => $user->ui_last_name ?? null
         ],
         'isOutfield' => $registration->gr_is_outfield,
-        'amount' => $registration->gr_amount,
+        'amount' => (float) $registration->gr_amount,
         'transactionNumber' => $registration->gr_transaction_number,
-        'registeredAt' => $registration->gr_created_at
+        'registeredAt' => Carbon::parse($registration->gr_created_at)->format(DateFormat::YEAR_MONTH_DAY_TIME)
       ];
     });
 
@@ -81,7 +83,7 @@ class GameDataBuilder
           'lastName' => $user->ui_last_name ?? null
         ],
         'isOutfield' => $registered->grp_is_outfield,
-        'amountPaid' => $registered->grp_amount_paid,
+        'amountPaid' => (float) $registered->grp_amount_paid,
         'transactionNumber' => $registered->grp_transaction_number,
         'paidAt' => $registered->grp_paid_at
       ];
