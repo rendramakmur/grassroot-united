@@ -7,6 +7,7 @@ use App\Http\Constant\GlobalParamSlug;
 use App\Http\Controllers\Controller;
 use App\Http\Helper\NumberGenerator;
 use App\Http\Requests\BackOffice\GameData\CreateGameDataRequest;
+use App\Http\Requests\BackOffice\GameData\DeletePaidPlayerRequest;
 use App\Http\Requests\BackOffice\GameData\PaidPlayerRequest;
 use App\Http\Requests\BackOffice\GameData\RegisterPlayerRequest;
 use App\Http\Requests\BackOffice\GameData\UpdateGameDataRequest;
@@ -150,11 +151,17 @@ class BackOfficeGameDataController extends Controller
             $this->buildErrorResponse('Game not found', ApiCode::NOT_FOUND);
         }
 
+        DB::beginTransaction();
+
         try {
             $game->delete();
 
+            DB::commit();
+
             $this->buildSuccessResponse("Game deleted successfully");
         } catch (\Exception $e) {
+            DB::rollBack();
+
             $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
         }
     }
@@ -234,18 +241,18 @@ class BackOfficeGameDataController extends Controller
         if (!$user) {
             $this->buildErrorResponse('User not found', ApiCode::NOT_FOUND);
         }
+
+        $registeredPlayer = GameRegistration::where('gr_gd_id', $game->gd_id)
+        ->where('gr_ui_id', $user->ui_id)
+        ->first();
+
+        if ($registeredPlayer) {
+            $this->buildErrorResponse("Player already registered", ApiCode::BAD_REQUEST);
+        }
         
         DB::beginTransaction();
 
         try {
-            $registeredPlayer = GameRegistration::where('gr_gd_id', $game->gd_id)
-            ->where('gr_ui_id', $user->ui_id)
-            ->first();
-
-            if ($registeredPlayer) {
-                $this->buildErrorResponse("Player already registered", ApiCode::BAD_REQUEST);
-            }
-
             if ($data['isOutfield']) {
                 $price = $game->gd_goalkeeper_price;
             } else {
@@ -337,6 +344,40 @@ class BackOfficeGameDataController extends Controller
             DB::commit();
             
             return $this->buildSuccessResponse($response);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
+        }
+    }
+
+    public function deletePaidPlayer(DeletePaidPlayerRequest $request, $gameNumber) {
+        $data = $request->validated();
+        $userNumber = $data['userNumber'];
+        $game = GameData::where('gd_game_number', $gameNumber)->first();
+        if (!$game) {
+            $this->buildErrorResponse('Game not found', ApiCode::NOT_FOUND);
+        }
+        $user = UserInformation::where('ui_user_number', $userNumber)->first();
+        if (!$user) {
+            $this->buildErrorResponse('User not found', ApiCode::NOT_FOUND);
+        }
+        $paidPlayer = GameRegisteredPlayer::where('grp_gd_id', $game->gd_id)
+        ->where('grp_ui_id', $user->ui_id)
+        ->first();
+
+        if (!$paidPlayer) {
+            $this->buildErrorResponse('Registered player not found', ApiCode::NOT_FOUND);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $paidPlayer->delete();
+
+            DB::commit();
+
+            $this->buildSuccessResponse("Registered player deleted successfully");
         } catch (\Exception $e) {
             DB::rollBack();
 
