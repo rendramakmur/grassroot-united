@@ -26,7 +26,7 @@ class FrontOfficeMiddleware
         }
 
         $tokenPayloadArray = json_decode(json_encode($decodedToken), true);
-        $request->merge(['tokenPayload' => $tokenPayloadArray]);
+        $request->attributes->set('tokenPayload', $tokenPayloadArray);
       } catch (\Exception $e) {
         $this->buildErrorResponse("Unauthorized", ApiCode::UNAUTHORIZED);
       }

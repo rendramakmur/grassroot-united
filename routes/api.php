@@ -25,6 +25,7 @@ Route::get('/activate/{userNumber}/{activationCode}', [FrontOfficeCredentialCont
 
 Route::group(['middleware' => 'frontoffice'], function() { 
     Route::get('/user/{userNumber}', [FrontOfficeUserInformationController::class, 'detail']);
+    Route::put('/user/{userNumber}', [FrontOfficeUserInformationController::class, 'update']);
 });
 
 Route::group(['prefix' => 'backoffice'], function() {
