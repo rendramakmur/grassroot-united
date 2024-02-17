@@ -3,6 +3,9 @@
 use App\Http\Controllers\BackOffice\Credential\BackOfficeCredentialController;
 use App\Http\Controllers\BackOffice\GameData\BackOfficeGameDataController;
 use App\Http\Controllers\BackOffice\UserInformation\BackOfficeUserInformationController;
+use App\Http\Controllers\FrontOffice\Credential\FrontOfficeCredentialController;
+use App\Http\Controllers\FrontOffice\UserInformation\FrontOfficeUserInformationController;
+use Illuminate\Routing\RouteGroup;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -16,7 +19,12 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::group(['prefix' => 'frontoffice'], function() {
+Route::post('/login', [FrontOfficeCredentialController::class, 'login']);
+Route::post('/register', [FrontOfficeCredentialController::class, 'register']);
+Route::get('/activate/{userNumber}/{activationCode}', [FrontOfficeCredentialController::class, 'activate']);
+
+Route::group(['middleware' => 'frontoffice'], function() { 
+    Route::get('/user/{userNumber}', [FrontOfficeUserInformationController::class, 'detail']);
 });
 
 Route::group(['prefix' => 'backoffice'], function() {
@@ -24,7 +32,6 @@ Route::group(['prefix' => 'backoffice'], function() {
 
     Route::group(['middleware' => 'backoffice'], function () {
         Route::get('/user/{userNumber}', [BackOfficeUserInformationController::class, 'detail']);
-        Route::get('/user/activate/{userNumber}/{activationCode}', [BackOfficeUserInformationController::class, 'activate']);
         Route::get('/user', [BackOfficeUserInformationController::class, 'index']);
         Route::post('/user', [BackOfficeUserInformationController::class, 'create']);
         Route::put('/user/{userNumber}', [BackOfficeUserInformationController::class, 'update']);

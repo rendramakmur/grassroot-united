@@ -22,7 +22,7 @@ class BackOfficeCredentialController extends Controller
         $user = UserInformation::where('ui_email', $data['email'])->first();
 
         if (!$user || !Hash::check($data['password'], $user->ui_password)) {
-            $this->buildErrorResponse("Email/Password is invalid", ApiCode::UNAUTHORIZED);
+            $this->buildErrorResponse("Email/Password is invalid", ApiCode::BAD_REQUEST);
         }
 
         $tokenPayload = [
