@@ -16,6 +16,7 @@ use App\Http\Requests\BackOffice\GameData\UpdateGameInformationRequest;
 use App\Http\Response\General\BasicResponse;
 use App\Http\Service\BackOffice\GameData\GameDataBuilder;
 use App\Http\Service\General\GlobalParamService;
+use App\Http\Service\General\ValidatePlayerQuota;
 use App\Models\GameData;
 use App\Models\GameGallery;
 use App\Models\GameInformation;
@@ -43,13 +44,19 @@ class BackOfficeGameDataController extends Controller
         $paginateData = $gameQuery->paginate($limit, ['*'], 'page', $page);
         $items = $paginateData->items();
         $response = collect($items)->map(function ($game) {
+            $registeredPlayer = GameRegisteredPlayer::where('grp_gd_id', $game->gd_id);
+            $outfieldCount = $registeredPlayer->where('grp_is_outfield', true)->count();
+            $goalkeeperCount = $registeredPlayer->where('grp_is_outfield', false)->count();
+
             return [
                 'id' => $game->gd_id,
                 'gameNumber' => $game->gd_game_number,
                 'venueName' => $game->gd_venue_name,
                 'gameDate' => $game->gd_game_date,
                 'goalkeeperQuota' => $game->gd_goalkeeper_quota,
+                'filledGoalkeeper' => $goalkeeperCount,
                 'outfieldQuota' => $game->gd_outfield_quota,
+                'filledOutfield' => $outfieldCount,
                 'gameStatus' => GlobalParamService::getDefaultDataBySlug($game->gd_status, GlobalParamSlug::GAME_STATUS)->toArray(),
             ];
         });
@@ -249,6 +256,8 @@ class BackOfficeGameDataController extends Controller
         if ($registeredPlayer) {
             $this->buildErrorResponse("Player already registered", ApiCode::BAD_REQUEST);
         }
+
+        ValidatePlayerQuota::validate($game);
         
         DB::beginTransaction();
 
@@ -279,8 +288,6 @@ class BackOfficeGameDataController extends Controller
 
             $this->buildErrorResponse($e, ApiCode::SERVER_ERROR);
         }
-
-
     }
 
     public function playerPaid(PaidPlayerRequest $request, $gameNumber) {
@@ -310,20 +317,7 @@ class BackOfficeGameDataController extends Controller
             $this->buildErrorResponse("Player already registered/paid", ApiCode::BAD_REQUEST);
         }
 
-        $outfieldCount = GameRegisteredPlayer::where('grp_gd_id', $game->gd_id)
-        ->where('grp_is_outfield', true)
-        ->count();
-        $goalkeeperCount = GameRegisteredPlayer::where('grp_gd_id', $game->gd_id)
-        ->where('grp_is_outfield', false)
-        ->count();
-        if ($outfieldCount >= $game->gd_outfield_quota) {
-            $this->buildErrorResponse("Outfield player quota already full", ApiCode::BAD_REQUEST);
-        }
-
-        if ($goalkeeperCount >= $game->gd_goalkeeper_quota) {
-            $this->buildErrorResponse("Goalkeeper quota already full", ApiCode::BAD_REQUEST);
-            
-        }
+        ValidatePlayerQuota::validate($game);
 
         DB::beginTransaction();
 
