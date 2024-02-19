@@ -75,7 +75,7 @@ class FrontOfficeGameDataController extends Controller
     }
 
     public function register(Request $request, $gameNumber) {
-        $isOutfield = $request->query('isOutfield' === true, true);
+        $isOutfield = $request->query('isOutfield' === 'true', true);
         $userId = $request->attributes->get('tokenPayload')['userId'];
         if (!$userId) {
             $this->buildErrorResponse('Please logged in first', ApiCode::NOT_FOUND);
