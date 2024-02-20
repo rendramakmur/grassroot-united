@@ -75,7 +75,7 @@ class FrontOfficeGameDataController extends Controller
     }
 
     public function register(Request $request, $gameNumber) {
-        $isOutfield = $request->query('isOutfield' === 'true', true);
+        $isOutfield = $request->query('isOutfield') == 'true';
         $userId = $request->attributes->get('tokenPayload')['userId'];
         if (!$userId) {
             $this->buildErrorResponse('Please logged in first', ApiCode::NOT_FOUND);
@@ -166,6 +166,8 @@ class FrontOfficeGameDataController extends Controller
             // Also save to transaction table
 
             $response = GameDataBuilder::build($game);
+
+            // Send email to user that they already paid
 
             DB::commit();
             
