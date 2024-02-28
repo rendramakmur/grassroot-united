@@ -6,6 +6,7 @@ use App\Http\Controllers\BackOffice\UserInformation\BackOfficeUserInformationCon
 use App\Http\Controllers\FrontOffice\Credential\FrontOfficeCredentialController;
 use App\Http\Controllers\FrontOffice\GameData\FrontOfficeGameDataController;
 use App\Http\Controllers\FrontOffice\UserInformation\FrontOfficeUserInformationController;
+use App\Http\Controllers\MasterDataController;
 use Illuminate\Routing\RouteGroup;
 use Illuminate\Support\Facades\Route;
 
@@ -27,8 +28,10 @@ Route::get('/game', [FrontOfficeGameDataController::class, 'index']);
 Route::get('/game/{userNumber}', [FrontOfficeGameDataController::class, 'detail']);
 
 Route::post('/game/player/paid/{transactionNumber}', [FrontOfficeGameDataController::class, 'paid']);
+Route::get('/masterdata/{slug}', [MasterDataController::class, 'getAll']);
+Route::get('/city', [MasterDataController::class, 'getAllCity']);
 
-Route::group(['middleware' => 'frontoffice'], function() { 
+Route::group(['middleware' => 'frontoffice'], function() {
     Route::get('/user/{userNumber}', [FrontOfficeUserInformationController::class, 'detail']);
     Route::put('/user/{userNumber}', [FrontOfficeUserInformationController::class, 'update']);
 
