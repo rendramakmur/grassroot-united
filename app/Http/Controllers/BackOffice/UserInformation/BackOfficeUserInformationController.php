@@ -27,7 +27,7 @@ class BackOfficeUserInformationController extends Controller
         $userNumber = $request->query('userNumber');
         $email = $request->query('email');
 
-        $userQuery = UserInformation::query();
+        $userQuery = UserInformation::query()->orderByDesc('ui_id');
 
         if ($userNumber) {
             $userQuery->where('ui_user_number', $userNumber);

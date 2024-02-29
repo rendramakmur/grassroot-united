@@ -30,6 +30,7 @@ class UpdateGameDataRequest extends FormRequest
             'venueAddress' => ['required', 'max:300'],
             'mapUrl' => ['required', 'url:http,https'],
             'gameDate' => ['required', 'date', 'after_or_equal:today'],
+            'duration' => ['required', 'integer'],
             'goalkeeperQuota' => ['required', 'integer'],
             'outfieldQuota' => ['required', 'integer'],
             'goalkeeperPrice' => ['required', 'numeric'],

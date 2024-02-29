@@ -23,6 +23,7 @@ class GameData extends Model
         'gd_venue_address',
         'gd_map_url',
         'gd_game_date',
+        'gd_duration',
         'gd_goalkeeper_quota',
         'gd_outfield_quota',
         'gd_goalkeeper_price',

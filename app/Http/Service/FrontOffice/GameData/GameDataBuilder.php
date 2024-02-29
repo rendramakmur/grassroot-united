@@ -25,6 +25,7 @@ class GameDataBuilder
       'venueName' => $gameData->gd_venue_name,
       'venueAddress' => $gameData->gd_venue_address,
       'mapUrl' => $gameData->gd_map_url,
+      'duration' => $gameData->gd_duration,
       'gameDate' => $gameData->gd_game_date,
       'goalkeeperQuota' => $gameData->gd_goalkeeper_quota,
       'filledGoalkeeper' => $goalkeeperCount,

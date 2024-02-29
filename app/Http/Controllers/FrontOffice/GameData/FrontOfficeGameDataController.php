@@ -26,7 +26,7 @@ class FrontOfficeGameDataController extends Controller
         $limit = $request->query('limit', 10);
         $gameNumber = $request->query('gameNumber');
 
-        $gameQuery = GameData::query();
+        $gameQuery = GameData::query()->orderByDesc('gd_id');
 
         if ($gameNumber) {
             $gameQuery->where('gd_game_number', $gameQuery);
@@ -45,6 +45,8 @@ class FrontOfficeGameDataController extends Controller
                 'gameNumber' => $game->gd_game_number,
                 'venueName' => $game->gd_venue_name,
                 'gameDate' => $game->gd_game_date,
+                'mapUrl' => $game->gd_map_url,
+                'duration' => $game->gd_duration,
                 'goalkeeperQuota' => $game->gd_goalkeeper_quota,
                 'filledGoalkeeper' => $goalkeeperCount,
                 'outfieldQuota' => $game->gd_outfield_quota,

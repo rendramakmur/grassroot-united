@@ -42,7 +42,6 @@ class FrontOfficeRegisterRequest extends FormRequest
             'dateOfBirth' => ['required', 'date', 'before:' . $fourteenYearsAgo],
             'gender' => ['required', 'array'],
             'gender.id' => ['required', 'integer'],
-            'address' => ['required', 'max:300'],
             'city' => ['required', 'array'],
             'city.id' => ['required', 'integer']
         ];

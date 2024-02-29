@@ -77,7 +77,6 @@ class FrontOfficeCredentialController extends Controller
             $user->ui_occupation = $data['occupation']['id'];
             $user->ui_date_of_birth = $data['dateOfBirth'];
             $user->ui_gender = $data['gender']['id'];
-            $user->ui_address = $data['address'];
             $user->ui_city = $data['city']['id'];
             $user->ui_activation_code = $uuid;
 
