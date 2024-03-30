@@ -20,11 +20,11 @@ trait BasicResponse{
   protected static function buildErrorResponse($error, $code) 
   {
     throw new HttpResponseException(response([
-      'status' => "error",
-      'data' => null,
-      'code' => $code,
-      'error' => $error
-      ]
+        'status' => "error",
+        'data' => null,
+        'code' => $code,
+        'error' => $error
+      ], $code
     ));
   }
 }
