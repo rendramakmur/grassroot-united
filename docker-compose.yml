@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  gufc-db:
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: grassroot_united_fc
+    ports:
+      - "5433:5432"
+    volumes:
+      - gufc_db:/var/lib/postgresql/data
+    networks:
+      - gufc_network
+    restart: always
+
+  redis:
+    image: 'redis:latest'
+    ports:
+      - '6380:6379'
+    networks:
+      - gufc_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  gufc-app:
+    build: .
+    image: gufc-app
+    env_file: .env
+    ports:
+      - "8085:8000"
+    container_name: gufc-app
+    depends_on:
+      - gufc-db
+    networks:
+      - gufc_network
+    restart: always
+
+volumes:
+  gufc_db:
+
+networks:
+  gufc_network:
