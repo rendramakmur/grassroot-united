@@ -45,3 +45,6 @@ volumes:
 
 networks:
   gufc_network:
+
+# Deployment notes:
+# migrate, db:seed, and config:clear
