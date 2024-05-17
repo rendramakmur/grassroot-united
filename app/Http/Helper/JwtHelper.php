@@ -29,12 +29,12 @@ class JwtHelper
   }
 
   public static function decodedToken(string $token)
-    {
-        try {
-            $decoded = JWT::decode($token, new Key(env('JWT_SECRET'), 'HS256'));
-            return $decoded;
-        } catch (\Exception $e) {
-            self::buildErrorResponse($e->getMessage(), ApiCode::UNAUTHORIZED);
-        }
-    }
+  {
+      try {
+          $decoded = JWT::decode($token, new Key(env('JWT_SECRET'), 'HS256'));
+          return $decoded;
+      } catch (\Exception $e) {
+          self::buildErrorResponse($e->getMessage(), ApiCode::UNAUTHORIZED);
+      }
+  }
 }

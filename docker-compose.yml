@@ -34,6 +34,8 @@ services:
     ports:
       - "8085:8000"
     container_name: gufc-app
+    volumes:
+      - .:/var/www/html
     depends_on:
       - gufc-db
     networks:

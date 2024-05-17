@@ -39,6 +39,7 @@ class FrontOfficeCredentialController extends Controller
         $tokenPayload = [
             'userId' => $user->ui_id,
             'userType' => $user->ui_user_type,
+            'userNumber' => $user->ui_user_number,
             'email' => $user->ui_email,
             'firstName' => $user->ui_first_name,
             'lastName' => $user->ui_last_name,
